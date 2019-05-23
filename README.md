@@ -1,11 +1,8 @@
-# (WIP) JS to AHK bindings transpiler
+# (WIP) Simple AHK - A limited AHK transpiler
 
 > Write Javscript and produce .ahk scripts
 
-This project limited scope. You cannot write complex scripts with this.
-
-## What it can do
-
+This project is limited in scope to:
 - Set key bindings
 - Set keys to autofire
 - Set keys to toggle
