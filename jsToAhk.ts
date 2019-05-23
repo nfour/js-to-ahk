@@ -3,6 +3,8 @@ import { writeFileSync } from 'fs';
 export class AhkScript {
   filePath: string;
 
+  buildContext: any;
+
 
   script: IAhkScriptConfig
   constructor (
@@ -72,25 +74,6 @@ interface IAhk {
 
 /** The configuration by which to construct an AHK script */
 interface IAhkScriptConfig {
-  globals: {
-    /** (Toggle) #SingleInstance, Force  */
-    SingeInstance: boolean
-  
-    /** #IfWinActive ahk_class SDL_app */
-    IfWinActive: string;
-
-    Persistant: boolean;
-
-    InstallKeybdHook: boolean;
-
-    InstallMouseHook: boolean;
-
-    MaxThreadsperHotkey: number
-
-    /** Defines max hotkeys before a popup box warning will appear */
-    MaxHotkeysPerInterval: number;
-  }
-
   stack: [];
 
   /** @description Menu, Tray, Icon, shell32.dll, 46 */
@@ -111,6 +94,6 @@ interface IAhkScriptConfig {
   keyBindings: [
     IAhk['keyEvent'],
     Function
-  ]
+  ][]
 
 }
