@@ -1,4 +1,4 @@
-# JS to AHK bindings transpiler
+# (WIP) JS to AHK bindings transpiler
 
 > Write Javscript and produce .ahk scripts
 
