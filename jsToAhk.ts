@@ -7,11 +7,11 @@ export class AhkScript {
 
 
   script: IAhkScriptConfig
-  constructor (
-    public saveTo
 
-  ) {
+  constructor (filePath: string) {
+    this.filePath = filePath;
 
+    
   }
 
   write () {
@@ -19,32 +19,6 @@ export class AhkScript {
   }
 }
 
-export type IAhkKeys = (
-    '!'
-  | '#'
-  | '+'
-  | '^'
-  | '{'
-  | '}'
-  | 'Click' | 'WheelDown' | 'WheelUp' | 'WheelLeft' | 'WheelRight' | 'LButton' | 'RButton' | 'MButton' | 'XButton1' | 'XButton2'
-  | 'Enter' | 'Escape' | 'Space' | 'Tab' | 'Backspace' | 'Delete' | 'Insert'
-  | 'Up' | 'Down' | 'Left' | 'Right'
-  | 'Home' | 'End' | 'PgUp' | 'PgDn'
-  | 'CapsLock' | 'ScrollLock' | 'NumLock'
-  | 'Control' | 'LControl' | 'RControl'
-  | 'Alt' | 'LAlt' | 'RAlt'
-  | 'Shift' | 'LShift' | 'RShift'
-  | 'LWin' | 'RWin'
-  | 'AppsKey' | 'Sleep'
-  | 'Numpad0' | 'NumpadDot' | 'NumpadEnter' | 'NumpadMult' | 'NumpadDiv' | 'NumpadAdd' | 'NumpadSub' | 'NumpadDel' | 'NumpadIns' | 'NumpadClear' | 'NumpadUp' | 'NumpadDown' | 'NumpadLeft' | 'NumpadRight' | 'NumpadHome' | 'NumpadEnd' | 'NumpadPgUp' | 'NumpadPgDn'
-  | 'Browser_Back' | 'Browser_Forward' | 'Browser_Refresh' | 'Browser_Stop' | 'Browser_Search' | 'Browser_Favorites' | 'Browser_Home'
-  | 'Volume_Mute' | 'Volume_Down' | 'Volume_Up'
-  | 'Media_Next' | 'Media_Prev' | 'Media_Stop' | 'Media_Play_Pause'
-  | 'Launch_Mail' | 'Launch_Media' | 'Launch_App1' | 'Launch_App2'
-  | 'PrintScreen' | 'CtrlBreak' | 'Pause'
-  | 'Blind'
-  | 'Raw'
-)
 
 /** Autohotkey signatures */
 interface IAhk {
@@ -97,3 +71,31 @@ interface IAhkScriptConfig {
   ][]
 
 }
+
+
+export type IAhkKeys = (
+  '!'
+| '#'
+| '+'
+| '^'
+| '{'
+| '}'
+| 'Click' | 'WheelDown' | 'WheelUp' | 'WheelLeft' | 'WheelRight' | 'LButton' | 'RButton' | 'MButton' | 'XButton1' | 'XButton2'
+| 'Enter' | 'Escape' | 'Space' | 'Tab' | 'Backspace' | 'Delete' | 'Insert'
+| 'Up' | 'Down' | 'Left' | 'Right'
+| 'Home' | 'End' | 'PgUp' | 'PgDn'
+| 'CapsLock' | 'ScrollLock' | 'NumLock'
+| 'Control' | 'LControl' | 'RControl'
+| 'Alt' | 'LAlt' | 'RAlt'
+| 'Shift' | 'LShift' | 'RShift'
+| 'LWin' | 'RWin'
+| 'AppsKey' | 'Sleep'
+| 'Numpad0' | 'NumpadDot' | 'NumpadEnter' | 'NumpadMult' | 'NumpadDiv' | 'NumpadAdd' | 'NumpadSub' | 'NumpadDel' | 'NumpadIns' | 'NumpadClear' | 'NumpadUp' | 'NumpadDown' | 'NumpadLeft' | 'NumpadRight' | 'NumpadHome' | 'NumpadEnd' | 'NumpadPgUp' | 'NumpadPgDn'
+| 'Browser_Back' | 'Browser_Forward' | 'Browser_Refresh' | 'Browser_Stop' | 'Browser_Search' | 'Browser_Favorites' | 'Browser_Home'
+| 'Volume_Mute' | 'Volume_Down' | 'Volume_Up'
+| 'Media_Next' | 'Media_Prev' | 'Media_Stop' | 'Media_Play_Pause'
+| 'Launch_Mail' | 'Launch_Media' | 'Launch_App1' | 'Launch_App2'
+| 'PrintScreen' | 'CtrlBreak' | 'Pause'
+| 'Blind'
+| 'Raw'
+)

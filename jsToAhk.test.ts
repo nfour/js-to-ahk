@@ -3,7 +3,10 @@ describe('use cases', () => {
     
   }
   
-  test('produce the default header', async () => {
+  test('just the globals', async () => {
+    compileTo
+  })
+  test('basic script, bindings', async () => {
     compileTo
   })
 })
