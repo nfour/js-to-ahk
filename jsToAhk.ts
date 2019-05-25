@@ -1,20 +1,41 @@
 import { writeFileSync } from 'fs';
-import { uniq } from 'lodash';
+import * as _ from 'lodash';
+import { dirname, resolve } from 'path';
 
 export function Ahk (...classArgs: ConstructorParameters<typeof AhkBuilder>): IAhkBuilderWithMethods {
   const builder = (() => {
     const base = new AhkBuilder(...classArgs);
 
-    const globalMethods = globalFunctionNames.reduce((a, funcName) => {
-      return {
-        ...a,
-        [funcName]: function (this: AhkBuilder, ...args: (string|number)[]) {
-          this.putFunction(funcName, ...args)
-        } 
-      }
-    }, {})
+    function reduceMethods <K extends any> (
+      names: K,
+      fn: (name: K[number]) => (this: AhkBuilder, ...args: (string|number)[]) => AhkBuilder
+    ) {
+      return names.reduce((a, name) => {
+        return {
+          ...a,
+          [name]: fn(name)
+        }
+      }, {})
+    }
 
-    Object.assign(base, globalMethods)
+    const functionMethods = reduceMethods(globalFunctionNames, (name) => function (...args) {
+      this.putFunction(name, ...args)
+      this.put('\n')
+
+      return this
+    })
+    const commandMethods = reduceMethods(globalCommandNames, (name) => function (...args) {
+      this.putCommand(name, ...args)
+
+      return this
+    })
+
+    const directiveMethods = reduceMethods(globalDirectiveNames, (name) => function (...args) {
+      this.putCommand(`#${name}`, ...args)
+      return this
+    })
+
+    Object.assign(base, functionMethods, commandMethods, directiveMethods)
 
     return base as IAhkBuilderWithMethods
   })();
@@ -27,12 +48,12 @@ type IBindingFn<B extends AhkBuilder> = (builder: B) => void
 
 export class AhkBuilder<InDeps extends string = string> {
   stack: string[] = []
-  inlineLibraryDependencies: InDeps[] = []
+  declaredLibraryDeps: InDeps[] = []
   inlineLibraries: { [K in InDeps]: string }
 
   protected putTransform: undefined | ((text: string) => string)
 
-  constructor ({ inlineLibraries }: { inlineLibraries?: { [K in InDeps]: string } }) {
+  constructor ({ inlineLibraries }: { inlineLibraries?: { [K in InDeps]: string } } = {}) {
     this.inlineLibraries = inlineLibraries || ({} as any)
   }
 
@@ -91,7 +112,7 @@ export class AhkBuilder<InDeps extends string = string> {
   }
 
   /** Produces a function call, like `GetKeyState("LShift", "P")` */
-  putFunction (func: IGlobalFunctionNames, ...args: (string|number)[]): this
+  putFunction (func: IGlobalNames, ...args: (string|number)[]): this
   putFunction (func: string, ...args: (string|number)[]): this
   putFunction (func: string, ...args: (string|number)[]): this {
     const wrappedArgs = args.map((key) => typeof key === 'string' ? `"${key}"` : key)
@@ -102,21 +123,27 @@ export class AhkBuilder<InDeps extends string = string> {
   }
 
   /** Produces a command, like `Send, {LShift}` */
-  putCommand (func: IGlobalFunctionNames, ...args: (string|number)[]): this
+  putCommand (func: IGlobalNames, ...args: (string|number)[]): this
   putCommand (func: string, ...args: (string|number)[]): this
   putCommand (func: string, ...args: (string|number)[]): this {
-    this.put(`${func}, ${args.join(', ')}`)
+    this.put(`${func}${args.length ? ', ' : ''}${args.join(', ')}\n`)
 
     return this;
   }
 
   /** Declare the need for an inline library dependency */
-  dependency (depName: InDeps) {
-    this.inlineLibraryDependencies = uniq([...this.inlineLibraryDependencies, depName])
+  dependency (depName: InDeps): this {
+    this.declaredLibraryDeps = _.uniq([...this.declaredLibraryDeps, depName])
+
+    return this;
   }
 
   toFile (filePath: string): this {
-    writeFileSync(filePath, this.transpile())
+    writeFileSync(
+      resolve(dirname(require.main.filename), filePath),
+      this.transpile(),
+      'utf8'
+    )
 
     return this;
   }
@@ -126,8 +153,24 @@ export class AhkBuilder<InDeps extends string = string> {
   }
 
   protected transpile (): string {
-    const declaredDeps = this.inlineLibraryDependencies.values()
-    return ''
+    console.log(this.stack)
+    const dependencyTextBlocks = _(this.inlineLibraries)
+      .pick(this.declaredLibraryDeps)
+      .values()
+      .value()
+
+    const isDeps = !!dependencyTextBlocks.length
+
+    const stack = [
+      isDeps ? inlineDepsDisclaimerHeader : '' ,
+      ...dependencyTextBlocks.map((blob) => `\n${blob}\n`),
+      isDeps ? inlineDepsDisclaimerHeader : '' ,
+      '\n',
+      ...this.stack,
+      '\n',
+    ]
+
+    return stack.join('')
   }
 
   protected setPutTransform (input: AhkBuilder['putTransform']) {
@@ -136,49 +179,105 @@ export class AhkBuilder<InDeps extends string = string> {
   
 }
 
+const inlineDepsDisclaimerHeader = `
+;;;
+;;; Inline dependencies:
+;;;
+`
+const inlineDepsDisclaimerFooter = `
+;;;
+;;; End of inline dependencies.
+;;;
+`
+
 const globalFunctionNames = <const> [
+  'GetKeyState',
+  'WinActive'
+]
+const globalCommandNames = <const> [
   'SetBatchLines',
   'SendMode',
   'SetKeyDelay',
+  'SetMouseDelay',
+  'Sleep',
+  'Send',
+  'SendInput',
+  'SetTimer',
+  'SoundBeep',
+  'Reload',
+  'Suspend',
+  'Exit',
+]
+
+const globalDirectiveNames = <const> [
   'SingeInstance',
   'IfWinActive',
-  'Persistant',
+  'Persistent',
   'InstallKeybdHook',
   'InstallMouseHook',
   'MaxThreadsperHotkey',
   'MaxHotkeysPerInterval',
-  'Send',
-  'GetKeyState',
 ]
 
-type IGlobalFunctionNames = typeof globalFunctionNames[number]
+type IGlobalNames = typeof globalFunctionNames[number] | typeof globalCommandNames[number]  | typeof globalDirectiveNames[number]
 
 /** This ensures we implement all functions defined in `globalFunctionNames` */
-type IGlobalFunctionNameMap = { [K in IGlobalFunctionNames]: any }
+type IGlobalMethodNameMap = { [K in IGlobalNames]: any }
 
-export abstract class AhkGlobalFunctions implements IGlobalFunctionNameMap {
-  abstract SetBatchLines(lines: string): this;
-  abstract SendMode(mode: 'Event' | 'Input' | 'Play'): this;
-  abstract SetKeyDelay(before: number, after: number): this;
-  /** Foo */
+export abstract class AhkGlobalFunctions implements IGlobalMethodNameMap {
+  //
+  // Directives
+  //
+
   abstract SingeInstance(method: 'Force'): this;
+  
   /**
    * @example 
    * 
-   * - ahk_class my_class
-   * - ahk_exe someApp.exe
+   * ahk_class my_class
+   * ahk_exe someApp.exe
    */
   abstract IfWinActive(arg: string): this;
-  abstract Persistant(): this;
+  abstract Persistent(): this;
   abstract InstallKeybdHook(): this;
   abstract InstallMouseHook(): this;
   /** @default 1 */
   abstract MaxThreadsperHotkey(n: number): this;
   /** Defines max hotkeys before a popup box warning will appear */
   abstract MaxHotkeysPerInterval(n: number): this;
+  
+  //
+  // Commands
+  //
 
+  abstract SetBatchLines(lines: string): this;
+  abstract SendMode(mode: 'Event' | 'Input' | 'Play'): this;
+  abstract SetKeyDelay(before: number, after: number): this;
+  abstract SetTimer(): this;
+  abstract SetMouseDelay(): this;
+  abstract SoundBeep(frequency: number, duration: number): this;
+  abstract SendInput(): this;
+  abstract Sleep(delay: number): this;
+  abstract Suspend(mode: 'On'|'Off'|'Toggle'|'Permit'): this;
+  abstract Reload(): this;
+  abstract Exit(): this;
+  /**
+   * @example
+   * .Send('{LShift}')
+   * .Send('{LShift Down}{LAlt Up}')
+   */
+  abstract Send(keys: IAhkSendInput): this;
   abstract Send(keys: string): this;
+
+  //
+  // Functions
+  //
+
+  abstract GetKeyState(keys: IAhkKeys, mode: 'P'): this;
   abstract GetKeyState(keys: string, mode: 'P'): this;
+
+  abstract WinActive(str: string): this;
+  
 }
 
 export type IAhkBuilderWithMethods = AhkBuilder & AhkGlobalFunctions
@@ -239,4 +338,25 @@ export type IAhkKeys = (
 | 'PrintScreen' | 'CtrlBreak' | 'Pause'
 | 'Blind'
 | 'Raw'
+)
+
+export type IAhkSendInput = (
+  '{Click}' | '{WheelDown}' | '{WheelUp}' | '{WheelLeft}' | '{WheelRight}' | '{LButton}' | '{RButton}' | '{MButton}' | '{XButton1}' | '{XButton2}'
+| '{Enter}' | '{Escape}' | '{Space}' | '{Tab}' | '{Backspace}' | '{Delete}' | '{Insert}'
+| '{Up}' | '{Down}' | '{Left}' | '{Right}'
+| '{Home}' | '{End}' | '{PgUp}' | '{PgDn}'
+| '{CapsLock}' | '{ScrollLock}' | '{NumLock}'
+| '{Control}' | '{LControl}' | '{RControl}'
+| '{Alt}' | '{LAlt}' | '{RAlt}'
+| '{Shift}' | '{LShift}' | '{RShift}'
+| '{LWin}' | '{RWin}'
+| '{AppsKey}' | '{Sleep}'
+| '{Numpad0}' | '{NumpadDot}' | '{NumpadEnter}' | '{NumpadMult}' | '{NumpadDiv}' | '{NumpadAdd}' | '{NumpadSub}' | '{NumpadDel}' | '{NumpadIns}' | '{NumpadClear}' | '{NumpadUp}' | '{NumpadDown}' | '{NumpadLeft}' | '{NumpadRight}' | '{NumpadHome}' | '{NumpadEnd}' | '{NumpadPgUp}' | '{NumpadPgDn}'
+| '{Browser_Back}' | '{Browser_Forward}' | '{Browser_Refresh}' | '{Browser_Stop}' | '{Browser_Search}' | '{Browser_Favorites}' | '{Browser_Home}'
+| '{Volume_Mute}' | '{Volume_Down}' | '{Volume_Up}'
+| '{Media_Next}' | '{Media_Prev}' | '{Media_Stop}' | '{Media_Play_Pause}'
+| '{Launch_Mail}' | '{Launch_Media}' | '{Launch_App1}' | '{Launch_App2}'
+| '{PrintScreen}' | '{CtrlBreak}' | '{Pause}'
+| '{Blind}'
+| '{Raw}'
 )

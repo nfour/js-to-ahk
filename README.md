@@ -68,7 +68,7 @@ ahk.raw(`~LButton::RButton`)
 // ~LButton::RButton
 
 ahk.toFile('./myScript.ahk')
-// Writes the script to the path, which is relative to the file this is called from
+// Writes the script to the path, which is relative to the initial file, `dirname(require.main.filename)`
 
 ahk.toString() // Returns the script as as string.
 /*

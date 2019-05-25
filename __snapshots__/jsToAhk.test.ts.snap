@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Ahk interface 1`] = `
+AhkBuilder {
+  "Exit": [Function],
+  "GetKeyState": [Function],
+  "IfWinActive": [Function],
+  "InstallKeybdHook": [Function],
+  "InstallMouseHook": [Function],
+  "MaxHotkeysPerInterval": [Function],
+  "MaxThreadsperHotkey": [Function],
+  "Persistent": [Function],
+  "Reload": [Function],
+  "Send": [Function],
+  "SendInput": [Function],
+  "SendMode": [Function],
+  "SetBatchLines": [Function],
+  "SetKeyDelay": [Function],
+  "SetMouseDelay": [Function],
+  "SetTimer": [Function],
+  "SingeInstance": [Function],
+  "SoundBeep": [Function],
+  "Suspend": [Function],
+  "WinActive": [Function],
+  "declaredLibraryDeps": Array [],
+  "inlineLibraries": Object {},
+  "stack": Array [],
+}
+`;
+
+exports[`just the globals 1`] = `
+"
+IfWinActive, ahk_class foo
+InstallKeybdHook
+InstallMouseHook
+Persistant
+SingeInstance, Force
+GetKeyState(\\"LShift\\", \\"P\\")
+
+"
+`;
