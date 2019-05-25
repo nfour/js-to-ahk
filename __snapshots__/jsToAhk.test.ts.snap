@@ -39,7 +39,7 @@ return a + b
 }
 
 ;;;
-;;; Inline dependencies:
+;;; End of inline dependencies.
 ;;;
 
 #IfWinActive, banana
