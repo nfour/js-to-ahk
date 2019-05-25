@@ -164,7 +164,7 @@ export class AhkBuilder<InDeps extends string = string> {
     const stack = [
       isDeps ? inlineDepsDisclaimerHeader : '' ,
       ...dependencyTextBlocks.map((blob) => `\n${blob}\n`),
-      isDeps ? inlineDepsDisclaimerHeader : '' ,
+      isDeps ? inlineDepsDisclaimerFooter : '' ,
       '\n',
       ...this.stack,
       '\n',
@@ -179,50 +179,6 @@ export class AhkBuilder<InDeps extends string = string> {
   
 }
 
-const inlineDepsDisclaimerHeader = `
-;;;
-;;; Inline dependencies:
-;;;
-`
-const inlineDepsDisclaimerFooter = `
-;;;
-;;; End of inline dependencies.
-;;;
-`
-
-const globalFunctionNames = <const> [
-  'GetKeyState',
-  'WinActive'
-]
-const globalCommandNames = <const> [
-  'SetBatchLines',
-  'SendMode',
-  'SetKeyDelay',
-  'SetMouseDelay',
-  'Sleep',
-  'Send',
-  'SendInput',
-  'SetTimer',
-  'SoundBeep',
-  'Reload',
-  'Suspend',
-  'Exit',
-]
-
-const globalDirectiveNames = <const> [
-  'SingeInstance',
-  'IfWinActive',
-  'Persistent',
-  'InstallKeybdHook',
-  'InstallMouseHook',
-  'MaxThreadsperHotkey',
-  'MaxHotkeysPerInterval',
-]
-
-type IGlobalNames = typeof globalFunctionNames[number] | typeof globalCommandNames[number]  | typeof globalDirectiveNames[number]
-
-/** This ensures we implement all functions defined in `globalFunctionNames` */
-type IGlobalMethodNameMap = { [K in IGlobalNames]: any }
 
 export abstract class AhkGlobalFunctions implements IGlobalMethodNameMap {
   //
@@ -250,13 +206,12 @@ export abstract class AhkGlobalFunctions implements IGlobalMethodNameMap {
   // Commands
   //
 
-  abstract SetBatchLines(lines: string): this;
+  abstract SetBatchLines(time: '10ms'): this;
+  abstract SetBatchLines(time: string): this;
   abstract SendMode(mode: 'Event' | 'Input' | 'Play'): this;
   abstract SetKeyDelay(before: number, after: number): this;
-  abstract SetTimer(): this;
   abstract SetMouseDelay(): this;
   abstract SoundBeep(frequency: number, duration: number): this;
-  abstract SendInput(): this;
   abstract Sleep(delay: number): this;
   abstract Suspend(mode: 'On'|'Off'|'Toggle'|'Permit'): this;
   abstract Reload(): this;
@@ -269,16 +224,67 @@ export abstract class AhkGlobalFunctions implements IGlobalMethodNameMap {
   abstract Send(keys: IAhkSendInput): this;
   abstract Send(keys: string): this;
 
+  /**
+   * @example
+   * .SendInput('{LShift}')
+   * .SendInput('{LShift Down}{LAlt Up}')
+   */
+  abstract SendInput(keys: IAhkSendInput): this;
+  abstract SendInput(keys: string): this;
+
   //
   // Functions
   //
 
   abstract GetKeyState(keys: IAhkKeys, mode: 'P'): this;
   abstract GetKeyState(keys: string, mode: 'P'): this;
-
   abstract WinActive(str: string): this;
-  
 }
+
+const inlineDepsDisclaimerHeader = `
+;;;
+;;; Inline dependencies:
+;;;
+`
+const inlineDepsDisclaimerFooter = `
+;;;
+;;; End of inline dependencies.
+;;;
+`
+
+const globalFunctionNames = <const> [
+  'GetKeyState',
+  'WinActive'
+]
+const globalCommandNames = <const> [
+  'SetBatchLines',
+  'SendMode',
+  'SetKeyDelay',
+  'SetMouseDelay',
+  'Sleep',
+  'Send',
+  'SendInput',
+  'SoundBeep',
+  'Reload',
+  'Suspend',
+  'Exit',
+]
+
+const globalDirectiveNames = <const> [
+  'SingeInstance',
+  'IfWinActive',
+  'Persistent',
+  'InstallKeybdHook',
+  'InstallMouseHook',
+  'MaxThreadsperHotkey',
+  'MaxHotkeysPerInterval',
+]
+
+type IGlobalNames = typeof globalFunctionNames[number] | typeof globalCommandNames[number]  | typeof globalDirectiveNames[number]
+
+/** This ensures we implement all functions defined in `globalFunctionNames` */
+type IGlobalMethodNameMap = { [K in IGlobalNames]: any }
+
 
 export type IAhkBuilderWithMethods = AhkBuilder & AhkGlobalFunctions
 

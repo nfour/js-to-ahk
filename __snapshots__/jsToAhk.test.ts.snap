@@ -17,8 +17,8 @@ AhkBuilder {
   "SetBatchLines": [Function],
   "SetKeyDelay": [Function],
   "SetMouseDelay": [Function],
-  "SetTimer": [Function],
   "SingeInstance": [Function],
+  "Sleep": [Function],
   "SoundBeep": [Function],
   "Suspend": [Function],
   "WinActive": [Function],
@@ -28,14 +28,46 @@ AhkBuilder {
 }
 `;
 
-exports[`just the globals 1`] = `
+exports[`bound functions and libraries 1`] = `
 "
-IfWinActive, ahk_class foo
-InstallKeybdHook
-InstallMouseHook
-Persistant
-SingeInstance, Force
+;;;
+;;; Inline dependencies:
+;;;
+
+add(a, b){
+return a + b
+}
+
+;;;
+;;; Inline dependencies:
+;;;
+
+#IfWinActive, banana
+x::
+  add(2, 3)  Send, {Space}
+
+Return
+
+"
+`;
+
+exports[`global commands, directives and functions 1`] = `
+"
+#IfWinActive, ahk_class foo
+#InstallKeybdHook
+#InstallMouseHook
+#Persistent
+#SingeInstance, Force
+#MaxHotkeysPerInterval, 200
+SetBatchLines, 5ms
+Send, {Alt}
+Sleep, 100
+SendInput, {Alt}
 GetKeyState(\\"LShift\\", \\"P\\")
+SoundBeep, 200, 10
+Reload
+Suspend, Toggle
+Exit
 
 "
 `;
