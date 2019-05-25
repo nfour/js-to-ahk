@@ -1,10 +1,10 @@
+import { Ahk } from './jsToAhk';
+
 describe('use cases', () => {
-  function createDefaultUsecase () {
-    
-  }
-  
+ 
   test('just the globals', async () => {
-    compileTo
+    const builder = Ahk()
+      .bind('asdasdas', 'asdsadas')
   })
   test('basic script, bindings', async () => {
     compileTo
